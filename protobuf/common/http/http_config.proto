@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package http;
+
+import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/go-home-admin/go-admin/generate/proto/common/http";
+
+extend google.protobuf.ServiceOptions {
+  // 路由分组名字
+  string RouteGroup = 51000;
+
+  // 资源类型curd
+  string Resource = 51001;
+}
+
+extend google.protobuf.MethodOptions {
+  repeated string Get = 50000;
+  repeated string Head = 50001;
+  repeated string Post = 50002;
+  repeated string Put = 50003;
+  repeated string Delete = 50004;
+  repeated string Options = 50005;
+  // 一次定义多种http类型
+  string Any = 50006;
+}

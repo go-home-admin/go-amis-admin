@@ -1,0 +1,33 @@
+// 定义文件级别的Json标签复制
+// @Tag("gorm", "autoUpdateTime:nano")
+
+syntax = "proto3";
+
+package admin;
+
+import "http_config.proto";
+
+option go_package = "github.com/go-home-admin/go-admin/generate/proto/admin";
+
+service Auth {
+  option (http.RouteGroup) = "admin-public";
+
+  // 登陆
+  rpc Login(LoginRequest)returns(LoginResponse){
+    option (http.Post) = "/auth/login";
+  }
+
+  // 退出登陆
+  rpc Logout(LoginRequest)returns(LoginResponse){
+    option (http.Post) = "/auth/logout";
+  }
+}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string token = 1;
+}
