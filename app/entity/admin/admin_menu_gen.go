@@ -11,18 +11,17 @@ import (
 )
 
 type AdminMenu struct {
-	Id        uint32         `gorm:"column:id;autoIncrement;type:int(10) unsigned;primaryKey;comment:'ID'" json:"id"`      // ID
-	ParentId  uint32         `gorm:"column:parent_id;type:int(11) unsigned;default:0;comment:'父级'" json:"parent_id"`       // 父级
-	Order     int32          `gorm:"column:order;type:int(11);default:0;comment:'排序'" json:"order"`                        // 排序
-	Name      string         `gorm:"column:name;type:varchar(50);comment:'组件名称'" json:"name"`                              // 组件名称
-	Component string         `gorm:"column:component;type:varchar(50);comment:'组件'" json:"component"`                      // 组件
-	Path      *string        `gorm:"column:path;type:varchar(255);default:NULL;comment:'地址'" json:"path"`                  // 地址
-	Redirect  *string        `gorm:"column:redirect;type:varchar(255);default:NULL;comment:'重定向'" json:"redirect"`         // 重定向
-	Meta      string         `gorm:"column:meta;type:longtext;comment:'元数据'" json:"meta"`                                  // 元数据
-	Sort      uint32         `gorm:"column:sort;type:int(10) unsigned;default:0;comment:'排序'" json:"sort"`                 // 排序
-	ApiList   *string        `gorm:"column:api_list;type:longtext;default:NULL;comment:'api'" json:"api_list"`             // api
-	CreatedAt *database.Time `gorm:"column:created_at;type:timestamp;default:NULL;comment:'created_at'" json:"created_at"` // created_at
-	UpdatedAt *database.Time `gorm:"column:updated_at;type:timestamp;default:NULL;comment:'updated_at'" json:"updated_at"` // updated_at
+	Id        uint32         `gorm:"column:id;autoIncrement;type:int unsigned;primaryKey;comment:'ID'" json:"id"` // ID
+	ParentId  uint32         `gorm:"column:parent_id;type:int unsigned;default:0;comment:'父级'" json:"parent_id"`  // 父级
+	Name      string         `gorm:"column:name;type:varchar(50);comment:'组件名称'" json:"name"`                     // 组件名称
+	Component string         `gorm:"column:component;type:varchar(50);comment:'组件'" json:"component"`             // 组件
+	Path      *string        `gorm:"column:path;type:varchar(255);comment:'地址'" json:"path"`                      // 地址
+	Redirect  *string        `gorm:"column:redirect;type:varchar(255);comment:'重定向'" json:"redirect"`             // 重定向
+	Meta      database.JSON  `gorm:"column:meta;type:json;comment:'元数据'" json:"meta"`                             // 元数据
+	Sort      uint32         `gorm:"column:sort;type:int unsigned;default:0;comment:'排序'" json:"sort"`            // 排序
+	ApiList   *database.JSON `gorm:"column:api_list;type:json;comment:'api'" json:"api_list"`                     // api
+	CreatedAt *database.Time `gorm:"column:created_at;type:timestamp;comment:'created_at'" json:"created_at"`     // created_at
+	UpdatedAt *database.Time `gorm:"column:updated_at;type:timestamp;comment:'updated_at'" json:"updated_at"`     // updated_at
 }
 
 func (receiver *AdminMenu) TableName() string {
@@ -369,10 +368,6 @@ func (orm *OrmAdminMenu) WhereParentIdNe(val uint32) *OrmAdminMenu {
 	orm.db.Where("`parent_id` <> ?", val)
 	return orm
 }
-func (orm *OrmAdminMenu) WhereOrder(val int32) *OrmAdminMenu {
-	orm.db.Where("`order` = ?", val)
-	return orm
-}
 func (orm *OrmAdminMenu) WhereName(val string) *OrmAdminMenu {
 	orm.db.Where("`name` = ?", val)
 	return orm
@@ -389,7 +384,7 @@ func (orm *OrmAdminMenu) WhereRedirect(val string) *OrmAdminMenu {
 	orm.db.Where("`redirect` = ?", val)
 	return orm
 }
-func (orm *OrmAdminMenu) WhereMeta(val string) *OrmAdminMenu {
+func (orm *OrmAdminMenu) WhereMeta(val database.JSON) *OrmAdminMenu {
 	orm.db.Where("`meta` = ?", val)
 	return orm
 }
@@ -397,7 +392,7 @@ func (orm *OrmAdminMenu) WhereSort(val uint32) *OrmAdminMenu {
 	orm.db.Where("`sort` = ?", val)
 	return orm
 }
-func (orm *OrmAdminMenu) WhereApiList(val string) *OrmAdminMenu {
+func (orm *OrmAdminMenu) WhereApiList(val database.JSON) *OrmAdminMenu {
 	orm.db.Where("`api_list` = ?", val)
 	return orm
 }

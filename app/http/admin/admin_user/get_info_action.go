@@ -10,8 +10,10 @@ import (
 func (receiver *Controller) GetInfo(req *admin.GetInfoRequest, ctx http.Context) (*admin.GetInfoResponse, error) {
 	// TODO 这里写业务
 	return &admin.GetInfoResponse{
-		Name:   "test",
-		Avatar: "https://avatars.githubusercontent.com/u/18717080?s=40&v=4",
+		Name:         "test",
+		Avatar:       "https://avatars.githubusercontent.com/u/18717080?s=30&v=4",
+		Roles:        "admin",
+		Introduction: "",
 	}, nil
 }
 

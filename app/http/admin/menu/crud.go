@@ -2,37 +2,40 @@ package menu
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/go-home-admin/amis"
 	"github.com/go-home-admin/go-admin/app/entity/admin"
-	"github.com/go-home-admin/go-admin/plugins/amis"
 )
 
 func (c *CrudContext) Common() {
 	c.SetDb(admin.NewOrmAdminMenu())
-
-	form := amis.NewForm()
-	form.Input("n", "测试")
-	form.Api = amis.Api{
-		Method: "post",
-		Url:    amis.GetUrl(c.Context),
-	}
-	c.GetPage().AddBody(form)
 }
 
 func (c *CrudContext) Table(curd *amis.Crud) {
-	curd.Column("自增", "id")
-	curd.Column("文本", "text")
-	curd.Column("图片", "image").Image()
-	curd.Column("日期", "date").Date()
-	curd.Column("进度", "progress").Progress()
-	curd.Column("状态", "status").Status()
-	curd.Column("开关", "switch").Switch()
-	curd.Column("映射", "mapping").Mapping(map[string]string{})
-	curd.Column("List", "list").List()
+	curd.Column("ID", "id")
+	curd.Column("父级", "parent_id")
+	curd.Column("排序", "order")
+	curd.Column("组件名称", "name")
+	curd.Column("组件", "component")
+	curd.Column("地址", "path")
+	curd.Column("重定向", "redirect")
+	curd.Column("元数据", "meta")
+	curd.Column("排序", "sort")
+	curd.Column("created_at", "created_at")
+	curd.Column("updated_at", "updated_at")
 }
 
 func (c *CrudContext) Form(form *amis.Form) {
-	form.Input("text", "文本")
-	form.Input("image", "图片")
+	form.Input("id", "ID")
+	form.Input("parent_id", "父级")
+	form.Input("name", "组件名称")
+	form.Input("component", "组件")
+	form.Input("path", "地址")
+	form.Input("redirect", "重定向")
+	form.Input("meta", "元数据")
+	form.Input("sort", "排序")
+	form.Input("api_list", "api")
+	form.Input("created_at", "created_at")
+	form.Input("updated_at", "updated_at")
 
 }
 

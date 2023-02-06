@@ -21,9 +21,12 @@ func (c *AdminRoutes) GetGroup() string {
 }
 func (c *AdminRoutes) GetRoutes() map[*api.Config]func(c *gin.Context) {
 	return map[*api.Config]func(c *gin.Context){
-		api.Get("/amis/tabs"):    c.amis.GinHandleDemo,
-		api.Get("/menu"):         c.menu.GinHandleCurd,
-		api.Any("/menu/:action"): c.menu.GinHandleCurd,
-		api.Get("/auth/info"):    c.admin_user.GinHandleGetInfo,
+		api.Get("/amis/tabs"):       c.amis.GinHandleDemo,
+		api.Get("/menu"):            c.menu.GinHandleCurd,
+		api.Post("/menu"):           c.menu.GinHandleCurd,
+		api.Get("/menu/:action"):    c.menu.GinHandleCurd,
+		api.Put("/menu/:action"):    c.menu.GinHandleCurd,
+		api.Delete("/menu/:action"): c.menu.GinHandleCurd,
+		api.Get("/auth/info"):       c.admin_user.GinHandleGetInfo,
 	}
 }

@@ -11,14 +11,14 @@ import (
 )
 
 type AdminUsers struct {
-	Id        uint32         `gorm:"column:id;autoIncrement;type:int(10) unsigned;primaryKey;comment:'id'" json:"id"`                                             // id
+	Id        uint32         `gorm:"column:id;autoIncrement;type:int unsigned;primaryKey;comment:'id'" json:"id"`                                                 // id
 	Username  string         `gorm:"column:username;type:varchar(190);index:laravel_admin_users_username_unique,class:BTREE,unique;comment:'账户'" json:"username"` // 账户
 	Password  string         `gorm:"column:password;type:varchar(60);comment:'密码'" json:"password"`                                                               // 密码
 	Name      string         `gorm:"column:name;type:varchar(255);comment:'显示名称'" json:"name"`                                                                    // 显示名称
-	Avatar    *string        `gorm:"column:avatar;type:varchar(255);default:NULL;comment:'头像'" json:"avatar"`                                                     // 头像
-	DeletedAt *database.Time `gorm:"column:deleted_at;type:timestamp;default:NULL;comment:'软删除'" json:"deleted_at"`                                               // 软删除
-	CreatedAt *database.Time `gorm:"column:created_at;type:timestamp;default:NULL;comment:'created_at'" json:"created_at"`                                        // created_at
-	UpdatedAt *database.Time `gorm:"column:updated_at;autoUpdateTime;type:timestamp;default:NULL;comment:'updated_at'" json:"updated_at"`                         // updated_at
+	Avatar    *string        `gorm:"column:avatar;type:varchar(255);comment:'头像'" json:"avatar"`                                                                  // 头像
+	DeletedAt *database.Time `gorm:"column:deleted_at;type:timestamp;comment:'软删除'" json:"deleted_at"`                                                            // 软删除
+	CreatedAt *database.Time `gorm:"column:created_at;type:timestamp;comment:'created_at'" json:"created_at"`                                                     // created_at
+	UpdatedAt *database.Time `gorm:"column:updated_at;type:timestamp;comment:'updated_at'" json:"updated_at"`                                                     // updated_at
 }
 
 func (receiver *AdminUsers) TableName() string {

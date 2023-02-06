@@ -4,7 +4,7 @@ import "github.com/gin-gonic/gin"
 
 type CurdData struct {
 	Items []interface{} `json:"items"`
-	Total int           `json:"total"`
+	Total int64         `json:"total"`
 	Page  int           `json:"page"`
 }
 
@@ -36,6 +36,8 @@ type Crud struct {
 	ctx           *gin.Context
 	columns       []interface{}
 	headerToolbar []interface{} `json:"headerToolbar,omitempty"`
+	// 操作列的索引
+	operation int
 }
 
 // CurdJsonConfig 这个对象直接响应到前端json
@@ -52,6 +54,7 @@ func (c *Crud) ToAmisJson() CurdJsonConfig {
 		Type:          "crud",
 		SyncLocation:  false,
 		HeaderToolbar: c.headerToolbar,
+		Api:           GetUrl(c.ctx, "/list"),
 	}
 	got.Columns = c.columns
 
@@ -63,7 +66,6 @@ func (c *Crud) Column(label string, name string) *ColumnConfig {
 		Name:  name,
 		Label: label,
 		Type:  "text",
-		Width: "",
 	}
 	c.columns = append(c.columns, config)
 	return config
@@ -71,13 +73,18 @@ func (c *Crud) Column(label string, name string) *ColumnConfig {
 
 // Operation 添加操作栏
 func (c *Crud) Operation() *OperationConfig {
-	config := &OperationConfig{
-		Label:   "操作",
-		Type:    "operation",
-		Buttons: []*Button{},
+	if c.operation == 0 {
+		config := &OperationConfig{
+			Label:   "操作",
+			Type:    "operation",
+			Buttons: []*Button{},
+		}
+		c.columns = append(c.columns, config)
+		c.operation = len(c.columns) - 1
+		return config
 	}
-	c.columns = append(c.columns, config)
-	return config
+
+	return c.columns[c.operation].(*OperationConfig)
 }
 
 // AddCreate 创建按钮
@@ -85,7 +92,7 @@ func (c *Crud) AddCreate(form *Form) {
 	f := *form
 	f.Api = Api{
 		Method: "post",
-		Url:    GetUrl(c.ctx),
+		Url:    GetUrl(c.ctx, ""),
 	}
 	page := NewPage("创建")
 	page.Body = f
@@ -117,6 +124,8 @@ type ColumnConfig struct {
 	Type  string `json:"type,omitempty"`
 	// 宽度
 	Width string `json:"width,omitempty" form:"width"`
+
+	Searchable interface{} `json:"searchable,omitempty"`
 }
 
 func (c *ColumnConfig) Image() *ColumnConfig {
@@ -151,4 +160,23 @@ func (c *ColumnConfig) Mapping(list map[string]string) *ColumnConfig {
 func (c *ColumnConfig) List() *ColumnConfig {
 	c.Type = "list"
 	return c
+}
+
+// SearchableInput 自动生成查询
+func (c *ColumnConfig) SearchableInput(opts ...string) *FormItemText {
+	name := c.Name
+	label := c.Label
+	switch len(opts) {
+	case 2:
+		name = opts[0]
+		label = opts[1]
+	case 1:
+		name = opts[0]
+	}
+
+	item := &FormItemText{
+		FormItem: NewItem(name, label, "input-text"),
+	}
+	c.Searchable = item
+	return item
 }

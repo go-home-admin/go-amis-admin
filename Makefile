@@ -24,6 +24,9 @@ make-swagger:
 make-bean:
 	toolset make:bean
 
+ln:
+	ln -s ../vue-amis-admin ./resources
+
 # 生成全部
 gen:protoc make-route make-bean make-swagger
 

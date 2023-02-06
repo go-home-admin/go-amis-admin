@@ -11,11 +11,11 @@ import (
 )
 
 type AdminRoles struct {
-	Id        uint32         `gorm:"column:id;autoIncrement;type:int(10) unsigned;primaryKey;comment:'id'" json:"id"`                                  // id
+	Id        uint32         `gorm:"column:id;autoIncrement;type:int unsigned;primaryKey;comment:'id'" json:"id"`                                      // id
 	Name      string         `gorm:"column:name;type:varchar(50);index:laravel_admin_roles_name_unique,class:BTREE,unique;comment:'角色名'" json:"name"`  // 角色名
 	Slug      string         `gorm:"column:slug;type:varchar(50);index:laravel_admin_roles_slug_unique,class:BTREE,unique;comment:'默认权限'" json:"slug"` // 默认权限
-	CreatedAt *database.Time `gorm:"column:created_at;type:timestamp;default:NULL;comment:'created_at'" json:"created_at"`                             // created_at
-	UpdatedAt *database.Time `gorm:"column:updated_at;type:timestamp;default:NULL;comment:'updated_at'" json:"updated_at"`                             // updated_at
+	CreatedAt *database.Time `gorm:"column:created_at;type:timestamp;comment:'created_at'" json:"created_at"`                                          // created_at
+	UpdatedAt *database.Time `gorm:"column:updated_at;type:timestamp;comment:'updated_at'" json:"updated_at"`                                          // updated_at
 }
 
 func (receiver *AdminRoles) TableName() string {

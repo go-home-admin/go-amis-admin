@@ -11,10 +11,10 @@ import (
 )
 
 type AdminRoleUsers struct {
-	RoleId    int32          `gorm:"column:role_id;type:int(11);index:laravel_admin_role_users_role_id_user_id_index,class:BTREE;comment:'role_id'" json:"role_id"` // role_id
-	UserId    int32          `gorm:"column:user_id;type:int(11);index:laravel_admin_role_users_role_id_user_id_index,class:BTREE;comment:'user_id'" json:"user_id"` // user_id
-	CreatedAt *database.Time `gorm:"column:created_at;type:timestamp;default:NULL;comment:'created_at'" json:"created_at"`                                          // created_at
-	UpdatedAt *database.Time `gorm:"column:updated_at;type:timestamp;default:NULL;comment:'updated_at'" json:"updated_at"`                                          // updated_at
+	RoleId    int32          `gorm:"column:role_id;type:int;index:laravel_admin_role_users_role_id_user_id_index,class:BTREE;comment:'role_id'" json:"role_id"` // role_id
+	UserId    int32          `gorm:"column:user_id;type:int;index:laravel_admin_role_users_role_id_user_id_index,class:BTREE;comment:'user_id'" json:"user_id"` // user_id
+	CreatedAt *database.Time `gorm:"column:created_at;type:timestamp;comment:'created_at'" json:"created_at"`                                                   // created_at
+	UpdatedAt *database.Time `gorm:"column:updated_at;type:timestamp;comment:'updated_at'" json:"updated_at"`                                                   // updated_at
 }
 
 func (receiver *AdminRoleUsers) TableName() string {
