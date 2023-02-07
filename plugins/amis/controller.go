@@ -51,6 +51,7 @@ type CurdController struct {
 type Model interface {
 	TableName() string
 	GetDB() *gorm.DB
+	GetTableInfo() interface{}
 }
 
 func (c *CurdController) GetPage() *Page {
@@ -80,7 +81,12 @@ func (c *CurdController) GetFromData(ctx *gin.Context) (map[string]interface{}, 
 		logrus.Error(err)
 		return nil, nil
 	}
+	form := NewForm()
+	c.Crud.Form(form)
 	data := map[string]interface{}{}
+	for _, item := range form.Items() {
+		data[item.GetName()] = item.GetValue(m)
+	}
 
 	return data, m
 }
@@ -150,9 +156,10 @@ func (c *CurdController) Index(ctx *gin.Context) {
 	c.Crud.Form(form)
 
 	// 把form放入到curd的按钮中
+	priStr := c.GetPrimary() + "=${" + c.GetPrimary() + "}"
 	crud.AddCreate(form)
-	crud.Operation().AddButton("编辑").SetDialog(form)
-	delUrl := GetUrl(ctx, "/del?${") + c.GetPrimary() + "}"
+	crud.Operation().AddButton("编辑").SetDialogForm(form.SetApi(GetUrl(ctx, "/edit?"+priStr), "put"))
+	delUrl := GetUrl(ctx, "/del?"+priStr)
 	crud.Operation().AddButton("删除").SetClassName("text-danger").SetAjax("确定要删除？", delUrl).Method = "delete"
 
 	page := c.GetPage()
@@ -163,18 +170,28 @@ func (c *CurdController) Index(ctx *gin.Context) {
 
 func (c *CurdController) List(ctx *gin.Context) {
 	got := NewCurdData()
+	got.Page = GetInt(c.Context, "page", 1)
 	list := make([]map[string]interface{}, 0)
 	c.model.GetDB().Count(&got.Total)
 	if got.Total > 0 {
-		Page := GetInt(c.Context, "page", 1)
-		PageSize := GetInt(c.Context, "pageSize", 20)
-		tx := c.model.GetDB().Offset((Page - 1) * PageSize).Limit(PageSize).Find(&list)
+		crud := NewCurd(ctx)
+		c.Crud.Table(crud)
+
+		PageSize := GetInt(c.Context, "perPage", 20)
+		tx := c.model.GetDB().Offset((got.Page - 1) * PageSize).Limit(PageSize).Find(&list)
 		if tx.Error != nil {
 			logrus.Error(tx.Error)
 		}
-		// TODO 后端值转换
 
 		for _, m := range list {
+			// 后端值转换
+			for _, columnT := range crud.columns {
+				if column, ok := columnT.(*ColumnConfig); ok {
+					if column.display != nil {
+						m[column.Name] = column.display(m[column.Name])
+					}
+				}
+			}
 			got.Items = append(got.Items, m)
 		}
 	}
@@ -205,8 +222,11 @@ func (c *CurdController) Update(ctx *gin.Context) {
 	primary := c.GetPrimary()
 	primaryValStringOrFloat64, ok := all[primary]
 	if !ok {
-		logrus.Error("必须要有主键数据才能更新, 当前的主建=" + primary)
-		return
+		primaryValStringOrFloat64 = ctx.Query(primary)
+		if primaryValStringOrFloat64 == "" {
+			logrus.Error("必须要有主键数据才能更新, 当前的主建=" + primary)
+			return
+		}
 	}
 	var primaryVal interface{}
 	switch primaryValStringOrFloat64.(type) {
@@ -235,7 +255,7 @@ func (c *CurdController) Delete(ctx *gin.Context) {
 		return
 	}
 
-	td := c.model.GetDB().Delete(c.model, primaryVal)
+	td := c.model.GetDB().Delete(c.model.GetTableInfo(), primaryVal)
 	if td.Error != nil {
 		logrus.Error(td.Error)
 		http.NewContext(ctx).Fail(errors.New("删除失败"))

@@ -25,3 +25,9 @@ func GetInt(ctx *gin.Context, k string, def int) int {
 	}
 	return i
 }
+
+func NewPageForm(form *Form) *Page {
+	page := NewPage("创建")
+	page.Body = form
+	return page
+}

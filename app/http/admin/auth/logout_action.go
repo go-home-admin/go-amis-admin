@@ -22,7 +22,7 @@ func (receiver *Controller) GinHandleLogout(ctx *gin.Context) {
 		context.Fail(err)
 		return
 	}
-	
+
 	resp, err := receiver.Logout(req, context)
 	if err != nil {
 		context.Fail(err)

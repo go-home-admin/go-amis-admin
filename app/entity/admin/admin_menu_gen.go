@@ -50,6 +50,10 @@ func (orm *OrmAdminMenu) GetDB() *gorm.DB {
 	return orm.db
 }
 
+func (orm *OrmAdminMenu) GetTableInfo() interface{} {
+	return &AdminMenu{}
+}
+
 // Create insert the value into database
 func (orm *OrmAdminMenu) Create(value interface{}) *gorm.DB {
 	return orm.db.Create(value)

@@ -26,12 +26,6 @@ func (b *Button) SetClassName(v string) *Button {
 	return b
 }
 
-func (b *Button) SetDialog(page interface{}) *Button {
-	b.ActionType = "dialog"
-	b.Dialog = page
-	return b
-}
-
 func (b *Button) SetAjax(confirmText, url string) *Api {
 	b.ConfirmText = confirmText
 	b.ActionType = "ajax"
@@ -40,4 +34,19 @@ func (b *Button) SetAjax(confirmText, url string) *Api {
 		Url:    url,
 	}
 	return b.Api
+}
+
+func (b *Button) SetDialog(page interface{}) *Button {
+	b.ActionType = "dialog"
+	b.Dialog = page
+	return b
+}
+
+func (b *Button) SetDialogForm(f *Form) *Button {
+	b.ActionType = "dialog"
+	page := NewPageForm(f)
+	page.Title = b.Label
+	page.SetOptions("size", f.GetDialogSize())
+	b.Dialog = page
+	return b
 }

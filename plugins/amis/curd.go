@@ -1,6 +1,12 @@
 package amis
 
-import "github.com/gin-gonic/gin"
+import (
+	"encoding/json"
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/go-home-admin/home/bootstrap/services/database"
+	"time"
+)
 
 type CurdData struct {
 	Items []interface{} `json:"items"`
@@ -28,6 +34,7 @@ func NewCurd(ctx *gin.Context) *Crud {
 	return &Crud{
 		ctx:     ctx,
 		columns: make([]interface{}, 0),
+		opt:     map[string]interface{}{},
 	}
 }
 
@@ -35,9 +42,14 @@ func NewCurd(ctx *gin.Context) *Crud {
 type Crud struct {
 	ctx           *gin.Context
 	columns       []interface{}
-	headerToolbar []interface{} `json:"headerToolbar,omitempty"`
+	headerToolbar []interface{}
 	// 操作列的索引
 	operation int
+	opt       map[string]interface{}
+}
+
+func (c *Crud) SetOptions(k string, v interface{}) {
+	c.opt[k] = v
 }
 
 // CurdJsonConfig 这个对象直接响应到前端json
@@ -47,25 +59,47 @@ type CurdJsonConfig struct {
 	SyncLocation  bool          `json:"syncLocation,omitempty"`
 	Columns       []interface{} `json:"columns,omitempty"`
 	HeaderToolbar []interface{} `json:"headerToolbar,omitempty"`
+	opt           map[string]interface{}
 }
 
-func (c *Crud) ToAmisJson() CurdJsonConfig {
-	got := CurdJsonConfig{
+func (p *CurdJsonConfig) MarshalJSON() ([]byte, error) {
+	newStruct := *p
+	if len(p.opt) == 0 {
+		return json.Marshal(newStruct)
+	}
+	mm := map[string]interface{}{}
+	by, _ := json.Marshal(newStruct)
+	_ = json.Unmarshal(by, &mm)
+	for k, v := range p.opt {
+		mm[k] = v
+	}
+	return json.Marshal(mm)
+}
+
+func (c *Crud) ToAmisJson() *CurdJsonConfig {
+	got := &CurdJsonConfig{
 		Type:          "crud",
 		SyncLocation:  false,
 		HeaderToolbar: c.headerToolbar,
 		Api:           GetUrl(c.ctx, "/list"),
+		opt:           c.opt,
 	}
 	got.Columns = c.columns
 
 	return got
 }
 
+func (c *Crud) AutoGenerateFilter() {
+	c.SetOptions("autoGenerateFilter", true)
+}
+
 func (c *Crud) Column(label string, name string) *ColumnConfig {
 	config := &ColumnConfig{
+		curl:  c,
 		Name:  name,
 		Label: label,
 		Type:  "text",
+		opt:   map[string]interface{}{},
 	}
 	c.columns = append(c.columns, config)
 	return config
@@ -89,14 +123,8 @@ func (c *Crud) Operation() *OperationConfig {
 
 // AddCreate 创建按钮
 func (c *Crud) AddCreate(form *Form) {
-	f := *form
-	f.Api = Api{
-		Method: "post",
-		Url:    GetUrl(c.ctx, ""),
-	}
-	page := NewPage("创建")
-	page.Body = f
-	button := NewButton(page.Title).SetDialog(page)
+	f := form.SetApi(GetUrl(c.ctx, ""), "post")
+	button := NewButton("创建").SetDialogForm(f)
 	button.Level = "primary"
 	c.headerToolbar = []interface{}{
 		button,
@@ -119,6 +147,8 @@ func (o *OperationConfig) AddButton(label string) *Button {
 
 // ColumnConfig 如果不需要响应到前端要加-
 type ColumnConfig struct {
+	curl *Crud
+
 	Name  string `json:"name,omitempty"`
 	Label string `json:"label,omitempty"`
 	Type  string `json:"type,omitempty"`
@@ -126,6 +156,31 @@ type ColumnConfig struct {
 	Width string `json:"width,omitempty" form:"width"`
 
 	Searchable interface{} `json:"searchable,omitempty"`
+	Format     string      `json:"format,omitempty"`
+	Value      interface{} `json:"value,omitempty"`
+	// opt 会合并到整个ColumnConfig上再输出到前端
+	opt     map[string]interface{}
+	display func(v interface{}) interface{}
+}
+
+// MarshalJSON opt 会合并到整个ColumnConfig上再输出到前端
+func (c *ColumnConfig) MarshalJSON() ([]byte, error) {
+	newStruct := *c
+	if len(c.opt) == 0 {
+		return json.Marshal(newStruct)
+	}
+	mm := map[string]interface{}{}
+	by, _ := json.Marshal(newStruct)
+	_ = json.Unmarshal(by, &mm)
+	for k, v := range c.opt {
+		mm[k] = v
+	}
+	return json.Marshal(mm)
+}
+
+func (c *ColumnConfig) Display(f func(v interface{}) interface{}) *ColumnConfig {
+	c.display = f
+	return c
 }
 
 func (c *ColumnConfig) Image() *ColumnConfig {
@@ -133,8 +188,22 @@ func (c *ColumnConfig) Image() *ColumnConfig {
 	return c
 }
 
-func (c *ColumnConfig) Date() *ColumnConfig {
+// Date 输出到前端，应该要时间戳，方便其他组件读取
+func (c *ColumnConfig) Date(formats ...string) *ColumnConfig {
 	c.Type = "date"
+	if len(formats) == 0 {
+		c.Format = "YYYY年MM月DD日 HH时mm分ss秒"
+		c.Width = "160"
+	} else {
+		c.Format = formats[0]
+	}
+	c.Display(func(v interface{}) interface{} {
+		switch v.(type) {
+		case time.Time:
+			return v.(time.Time).Unix()
+		}
+		return database.StrToTime(fmt.Sprintf("%v", v)).Unix()
+	})
 	return c
 }
 
@@ -177,6 +246,7 @@ func (c *ColumnConfig) SearchableInput(opts ...string) *FormItemText {
 	item := &FormItemText{
 		FormItem: NewItem(name, label, "input-text"),
 	}
+	c.Type = ""
 	c.Searchable = item
 	return item
 }
