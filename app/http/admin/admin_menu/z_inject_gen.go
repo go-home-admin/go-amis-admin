@@ -1,5 +1,5 @@
 // gen for home toolset
-package menu
+package admin_menu
 
 import (
 	providers "github.com/go-home-admin/home/bootstrap/providers"

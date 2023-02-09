@@ -232,15 +232,16 @@ func (c *ColumnConfig) List() *ColumnConfig {
 }
 
 // SearchableInput 自动生成查询
+// SearchableInput(label, name...)
 func (c *ColumnConfig) SearchableInput(opts ...string) *FormItemText {
 	name := c.Name
 	label := c.Label
 	switch len(opts) {
 	case 2:
-		name = opts[0]
-		label = opts[1]
+		name = opts[1]
+		label = opts[0]
 	case 1:
-		name = opts[0]
+		label = opts[0]
 	}
 
 	item := &FormItemText{

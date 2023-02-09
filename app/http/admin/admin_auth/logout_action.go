@@ -1,4 +1,4 @@
-package auth
+package admin_auth
 
 import (
 	gin "github.com/gin-gonic/gin"
@@ -6,17 +6,15 @@ import (
 	http "github.com/go-home-admin/home/app/http"
 )
 
-// Login   登陆
-func (receiver *Controller) Login(req *admin.LoginRequest, ctx http.Context) (*admin.LoginResponse, error) {
+// Logout   退出登陆
+func (receiver *Controller) Logout(req *admin.LoginRequest, ctx http.Context) (*admin.LoginResponse, error) {
 	// TODO 这里写业务
-	return &admin.LoginResponse{
-		Token: "123",
-	}, nil
+	return &admin.LoginResponse{}, nil
 }
 
-// GinHandleLogin gin原始路由处理
-// http.Post(/auth/login)
-func (receiver *Controller) GinHandleLogin(ctx *gin.Context) {
+// GinHandleLogout gin原始路由处理
+// http.Post(/auth/logout)
+func (receiver *Controller) GinHandleLogout(ctx *gin.Context) {
 	req := &admin.LoginRequest{}
 	err := ctx.ShouldBind(req)
 	context := http.NewContext(ctx)
@@ -25,7 +23,7 @@ func (receiver *Controller) GinHandleLogin(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := receiver.Login(req, context)
+	resp, err := receiver.Logout(req, context)
 	if err != nil {
 		context.Fail(err)
 		return

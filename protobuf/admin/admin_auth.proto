@@ -9,7 +9,7 @@ import "http_config.proto";
 
 option go_package = "github.com/go-home-admin/go-admin/generate/proto/admin";
 
-service Auth {
+service AdminAuth {
   option (http.RouteGroup) = "admin-public";
 
   // 登陆
@@ -21,6 +21,11 @@ service Auth {
   rpc Logout(LoginRequest)returns(LoginResponse){
     option (http.Post) = "/auth/logout";
   }
+
+  // 我的菜单
+  rpc MyMenu(MyMenuRequest)returns(MyMenuResponse){
+    option (http.Get) = "/auth/menus";
+  }
 }
 
 message LoginRequest {
@@ -30,4 +35,30 @@ message LoginRequest {
 
 message LoginResponse {
   string token = 1;
+}
+
+message MyMenuRequest {
+
+}
+
+message MyMenuResponse {
+  repeated MenuInfo menus = 1;
+}
+
+message MenuInfo {
+  uint32 id = 1;
+  uint32 parent_id = 2;
+  string path = 3;
+  bool hidden = 4;
+  string name = 5;
+  string redirect = 6;
+  string component = 7;
+  Meta meta = 8;
+  repeated MenuInfo children = 9;
+}
+
+message Meta {
+  string title = 1;
+  string icon = 2;
+  string amis = 3;
 }

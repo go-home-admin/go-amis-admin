@@ -1,5 +1,5 @@
 // gen for home toolset
-package auth
+package admin_auth
 
 import (
 	providers "github.com/go-home-admin/home/bootstrap/providers"

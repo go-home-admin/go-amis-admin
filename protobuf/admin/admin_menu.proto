@@ -9,8 +9,9 @@ import "http_config.proto";
 
 option go_package = "github.com/go-home-admin/go-admin/generate/proto/admin";
 
-service Menu {
+service AdminMenu {
   option (http.RouteGroup) = "admin";
 
-  option (http.Resource) = "/menu";
+  // 管理用户的增删改查
+  option (http.Resource) = "menus";
 }

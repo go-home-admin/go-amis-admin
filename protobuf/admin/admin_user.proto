@@ -12,6 +12,9 @@ option go_package = "github.com/go-home-admin/go-admin/generate/proto/admin";
 service AdminUser {
   option (http.RouteGroup) = "admin";
 
+  // 管理用户的增删改查
+  option (http.Resource) = "users";
+
   // 登陆信息
   rpc GetInfo(GetInfoRequest)returns(GetInfoResponse){
     option (http.Get) = "/auth/info";

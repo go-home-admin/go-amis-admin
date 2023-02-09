@@ -14,7 +14,7 @@ type Api struct {
 func NewPage(title string) *Page {
 	return &Page{
 		Id:    "",
-		Type:  "",
+		Type:  "page",
 		Title: title,
 		Body:  nil,
 		Data:  nil,

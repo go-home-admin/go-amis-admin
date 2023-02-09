@@ -44,6 +44,10 @@ func (orm *OrmAdminRoles) GetDB() *gorm.DB {
 	return orm.db
 }
 
+func (orm *OrmAdminRoles) GetTableInfo() interface{} {
+	return &AdminRoles{}
+}
+
 // Create insert the value into database
 func (orm *OrmAdminRoles) Create(value interface{}) *gorm.DB {
 	return orm.db.Create(value)

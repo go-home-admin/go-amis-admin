@@ -83,15 +83,18 @@ type IsFormItem interface {
 }
 
 type FormItem struct {
-	IsFormItem  `json:"-"`
-	Id          string `json:"id,omitempty"`
-	Label       string `json:"label"`
-	Type        string `json:"type"`
-	Name        string `json:"name"`
-	Placeholder string `json:"placeholder,omitempty"`
+	IsFormItem `json:"-"`
+	Id         string `json:"id,omitempty"`
+	Label      string `json:"label"`
+	Type       string `json:"type"`
+	Name       string `json:"name"`
 
 	save func(old interface{}) interface{}
 	opt  map[string]interface{}
+}
+
+func (f *FormItem) SetOptions(k string, v interface{}) {
+	f.opt[k] = v
 }
 
 // MarshalJSON opt 会合并到整个ColumnConfig上再输出到前端
@@ -133,6 +136,11 @@ func (f *FormItem) GetValue(row map[string]interface{}) interface{} {
 		got = f.save(got)
 	}
 	return got
+}
+
+func (f *FormItem) Placeholder(v string) *FormItem {
+	f.SetOptions("placeholder", v)
+	return f
 }
 
 func (f *FormItem) SetSave(fun func(old interface{}) interface{}) {
