@@ -9,15 +9,19 @@ import (
 )
 
 // GetInfo   登陆信息
-func (receiver *Controller) GetInfo(req *admin.GetInfoRequest, ctx http.Context) (*admin.GetInfoResponse, error) {
+func (c *Controller) GetInfo(req *admin.GetInfoRequest, ctx http.Context) (*admin.GetInfoResponse, error) {
 	userID := ctx.Id()
 	user, has := admin2.NewOrmAdminUsers().WhereId(uint32(userID)).First()
 	if !has {
 		return nil, errors.New("错误的用户信息")
 	}
+	avatar := ""
+	if user.Avatar != nil {
+		avatar = *user.Avatar
+	}
 	return &admin.GetInfoResponse{
 		Name:         user.Name,
-		Avatar:       *user.Avatar,
+		Avatar:       avatar,
 		Roles:        "admin",
 		Introduction: "",
 	}, nil
@@ -25,7 +29,7 @@ func (receiver *Controller) GetInfo(req *admin.GetInfoRequest, ctx http.Context)
 
 // GinHandleGetInfo gin原始路由处理
 // http.Get(/auth/info)
-func (receiver *Controller) GinHandleGetInfo(ctx *gin.Context) {
+func (c *Controller) GinHandleGetInfo(ctx *gin.Context) {
 	req := &admin.GetInfoRequest{}
 	err := ctx.ShouldBind(req)
 	context := http.NewContext(ctx)
@@ -34,7 +38,7 @@ func (receiver *Controller) GinHandleGetInfo(ctx *gin.Context) {
 		return
 	}
 
-	resp, err := receiver.GetInfo(req, context)
+	resp, err := c.GetInfo(req, context)
 	if err != nil {
 		context.Fail(err)
 		return
