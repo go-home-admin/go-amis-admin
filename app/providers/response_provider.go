@@ -45,10 +45,19 @@ func (receiver Ctx) Gin() *gin.Context {
 }
 
 func (receiver Ctx) User() interface{} {
-	return receiver.UserInfo
+	u, ok := receiver.Context.Get(http.UserKey)
+	if !ok {
+		return nil
+	}
+	return u
 }
+
 func (receiver Ctx) Id() uint64 {
-	return receiver.UserID
+	u, ok := receiver.Context.Get(http.UserIdKey)
+	if !ok {
+		return 0
+	}
+	return u.(uint64)
 }
 
 func (receiver Ctx) Token() string {

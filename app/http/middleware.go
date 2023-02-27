@@ -2,8 +2,11 @@ package http
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/go-home-admin/go-admin/app/services/auth"
+	http2 "github.com/go-home-admin/home/app/http"
 	"github.com/go-home-admin/home/bootstrap/services/app"
 	"net/http"
+	"strings"
 )
 
 // Cors 跨域
@@ -32,6 +35,29 @@ func Cors() gin.HandlerFunc {
 			c.AbortWithStatus(http.StatusNoContent)
 		}
 		// 处理请求
+		c.Next()
+	}
+}
+
+func AdminAuth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		token := c.GetHeader("X-Token")
+
+		if token == "" {
+			token = c.GetHeader("Authorization")
+			if strings.HasPrefix(token, "Bearer ") {
+				token = token[7:]
+			}
+			if token == "" {
+				c.AbortWithStatus(http.StatusUnauthorized)
+			}
+		}
+
+		userID, err := auth.NewJwt().GetUid(token)
+		if err != nil {
+			c.AbortWithStatus(http.StatusForbidden)
+		}
+		c.Set(http2.UserIdKey, uint64(userID))
 		c.Next()
 	}
 }

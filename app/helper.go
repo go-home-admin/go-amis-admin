@@ -1,6 +1,8 @@
 package app
 
 import (
+	"crypto/md5"
+	"fmt"
 	"github.com/go-home-admin/home/bootstrap/providers"
 	"github.com/go-home-admin/home/bootstrap/servers"
 	"reflect"
@@ -37,4 +39,9 @@ func GetTagInfoWitch(tag, search string) string {
 	}
 
 	return ""
+}
+
+func MD5(s string) string {
+	data := []byte(s)
+	return fmt.Sprintf("%x", md5.Sum(data))
 }

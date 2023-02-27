@@ -46,6 +46,13 @@ type Crud struct {
 	// 操作列的索引
 	operation int
 	opt       map[string]interface{}
+	// 开启强制过滤, 默认读取整个表字段, 如果设置为true, 只读取Column里的字段
+	enSelect bool
+}
+
+// EnSelect 开启强制过滤, 默认读取整个表字段, 如果设置为true, 只读取Column里的字段
+func (c *Crud) EnSelect() {
+	c.enSelect = true
 }
 
 func (c *Crud) SetOptions(k string, v interface{}) {
@@ -178,13 +185,12 @@ func (c *ColumnConfig) MarshalJSON() ([]byte, error) {
 	return json.Marshal(mm)
 }
 
-func (c *ColumnConfig) Display(f func(v interface{}) interface{}) *ColumnConfig {
-	c.display = f
-	return c
+func (c *ColumnConfig) SetOptions(k string, v interface{}) {
+	c.opt[k] = v
 }
 
-func (c *ColumnConfig) Image() *ColumnConfig {
-	c.Type = "image"
+func (c *ColumnConfig) Display(f func(v interface{}) interface{}) *ColumnConfig {
+	c.display = f
 	return c
 }
 

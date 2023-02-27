@@ -11,6 +11,7 @@ func NewForm() *Form {
 		Type:     "form",
 		Body:     make([]interface{}, 0),
 		itemList: make(map[string]IsFormItem),
+		data:     map[string]interface{}{},
 	}
 }
 
@@ -32,10 +33,22 @@ type Form struct {
 	itemList map[string]IsFormItem
 	// 如果包装到dialog, 可以设置到dialog组件
 	size string
+	// 默认更新的值
+	data map[string]interface{}
 }
 
 type FormModeHorizontal struct {
 	LeftFixed string `json:"leftFixed"`
+}
+
+func (f *Form) SetData(i map[string]interface{}) *Form {
+	f.data = i
+	return f
+}
+
+func (f *Form) AddData(k string, v interface{}) *Form {
+	f.data[k] = v
+	return f
 }
 
 func (f *Form) SetSize(i string) *Form {

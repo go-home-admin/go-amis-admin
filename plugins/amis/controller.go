@@ -7,6 +7,7 @@ import (
 	"github.com/go-home-admin/home/app/http"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+	"strings"
 )
 
 type Index interface {
@@ -83,9 +84,12 @@ func (c *CurdController) GetFromData(ctx *gin.Context) (map[string]interface{}, 
 	}
 	form := NewForm()
 	c.Crud.Form(form)
-	data := map[string]interface{}{}
+	data := form.data
 	for _, item := range form.Items() {
-		data[item.GetName()] = item.GetValue(m)
+		v := item.GetValue(m)
+		if v != nil {
+			data[item.GetName()] = item.GetValue(m)
+		}
 	}
 
 	return data, m
@@ -178,7 +182,18 @@ func (c *CurdController) List(ctx *gin.Context) {
 		c.Crud.Table(crud)
 
 		PageSize := GetInt(c.Context, "perPage", 20)
-		tx := c.model.GetDB().Offset((got.Page - 1) * PageSize).Limit(PageSize).Find(&list)
+		orm := c.model.GetDB().Offset((got.Page - 1) * PageSize).Limit(PageSize)
+		if crud.enSelect {
+			query := ""
+			// 只读取设置了columns才读取数据库
+			for _, columnT := range crud.columns {
+				if column, ok := columnT.(*ColumnConfig); ok {
+					query += column.Name + ","
+				}
+			}
+			orm.Select(strings.Trim(query, ","))
+		}
+		tx := orm.Find(&list)
 		if tx.Error != nil {
 			logrus.Error(tx.Error)
 		}
@@ -200,13 +215,7 @@ func (c *CurdController) List(ctx *gin.Context) {
 }
 
 func (c *CurdController) Create(ctx *gin.Context) {
-	by, _ := ctx.GetRawData()
-	var data map[string]interface{}
-	err := json.Unmarshal(by, &data)
-	if err != nil {
-		logrus.Error(err)
-		return
-	}
+	data, _ := c.GetFromData(ctx)
 
 	td := c.model.GetDB().Create(&data)
 	if td.Error != nil {

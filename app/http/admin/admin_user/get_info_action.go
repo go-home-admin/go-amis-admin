@@ -1,17 +1,23 @@
 package admin_user
 
 import (
+	"errors"
 	gin "github.com/gin-gonic/gin"
+	admin2 "github.com/go-home-admin/go-admin/app/entity/admin"
 	admin "github.com/go-home-admin/go-admin/generate/proto/admin"
 	http "github.com/go-home-admin/home/app/http"
 )
 
 // GetInfo   登陆信息
 func (receiver *Controller) GetInfo(req *admin.GetInfoRequest, ctx http.Context) (*admin.GetInfoResponse, error) {
-	// TODO 这里写业务
+	userID := ctx.Id()
+	user, has := admin2.NewOrmAdminUsers().WhereId(uint32(userID)).First()
+	if !has {
+		return nil, errors.New("错误的用户信息")
+	}
 	return &admin.GetInfoResponse{
-		Name:         "test",
-		Avatar:       "https://avatars.githubusercontent.com/u/18717080?s=30&v=4",
+		Name:         user.Name,
+		Avatar:       *user.Avatar,
 		Roles:        "admin",
 		Introduction: "",
 	}, nil

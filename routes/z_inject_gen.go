@@ -10,18 +10,26 @@ import (
 	providers "github.com/go-home-admin/home/bootstrap/providers"
 )
 
-var _AdminRoutesSingle *AdminRoutes
 var _AdminPublicRoutesSingle *AdminPublicRoutes
+var _AdminRoutesSingle *AdminRoutes
 var _ApiRoutesSingle *ApiRoutes
 
 func GetAllProvider() []interface{} {
 	return []interface{}{
-		NewAdminRoutes(),
 		NewAdminPublicRoutes(),
+		NewAdminRoutes(),
 		NewApiRoutes(),
 	}
 }
 
+func NewAdminPublicRoutes() *AdminPublicRoutes {
+	if _AdminPublicRoutesSingle == nil {
+		_AdminPublicRoutesSingle = &AdminPublicRoutes{}
+		_AdminPublicRoutesSingle.admin_auth = admin_auth.NewController()
+		providers.AfterProvider(_AdminPublicRoutesSingle, "")
+	}
+	return _AdminPublicRoutesSingle
+}
 func NewAdminRoutes() *AdminRoutes {
 	if _AdminRoutesSingle == nil {
 		_AdminRoutesSingle = &AdminRoutes{}
@@ -30,14 +38,6 @@ func NewAdminRoutes() *AdminRoutes {
 		providers.AfterProvider(_AdminRoutesSingle, "")
 	}
 	return _AdminRoutesSingle
-}
-func NewAdminPublicRoutes() *AdminPublicRoutes {
-	if _AdminPublicRoutesSingle == nil {
-		_AdminPublicRoutesSingle = &AdminPublicRoutes{}
-		_AdminPublicRoutesSingle.admin_auth = admin_auth.NewController()
-		providers.AfterProvider(_AdminPublicRoutesSingle, "")
-	}
-	return _AdminPublicRoutesSingle
 }
 func NewApiRoutes() *ApiRoutes {
 	if _ApiRoutesSingle == nil {

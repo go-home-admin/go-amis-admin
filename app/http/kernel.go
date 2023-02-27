@@ -19,8 +19,10 @@ func (k *Kernel) Init() {
 
 	// 分组中间件, 在路由提供者中自行设置
 	k.MiddlewareGroup = map[string][]gin.HandlerFunc{
-		"admin": {},
-		"api":   {},
+		"admin": {
+			AdminAuth(),
+		},
+		"api": {},
 	}
 }
 
