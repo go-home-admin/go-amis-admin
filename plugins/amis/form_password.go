@@ -1,6 +1,6 @@
 package amis
 
-func (f *Form) Password(name, label string) *FormItemText {
+func (f *Form) InputPassword(name, label string) *FormItemText {
 	item := &FormItemText{
 		FormItem: NewItem(name, label, "input-password"),
 	}

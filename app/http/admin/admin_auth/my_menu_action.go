@@ -16,13 +16,21 @@ func (receiver *Controller) MyMenu(req *admin.MyMenuRequest, ctx http.Context) (
 	for _, data := range admin2.NewOrmAdminMenu().Order("sort DESC").Get() {
 		meta := &admin.Meta{}
 		data.Meta.Trans(meta)
+		path := ""
+		if data.Path != nil {
+			path = *data.Path
+		}
+		redirect := ""
+		if data.Redirect != nil {
+			redirect = *data.Redirect
+		}
 		Tdata := &admin.MenuInfo{
 			Id:        data.Id,
 			ParentId:  data.ParentId,
-			Path:      *data.Path,
+			Path:      path,
 			Hidden:    data.Hidden == 1,
 			Name:      data.Name,
-			Redirect:  *data.Redirect,
+			Redirect:  redirect,
 			Component: data.Component,
 			Meta:      meta,
 			Children:  make([]*admin.MenuInfo, 0),

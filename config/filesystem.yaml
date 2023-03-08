@@ -1,0 +1,8 @@
+default: local
+
+disks:
+  local:
+    root: ./storage/files
+    url: http://127.0.0.1:5000/files
+  oss:
+    root:

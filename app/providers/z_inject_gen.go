@@ -2,8 +2,10 @@
 package providers
 
 import (
+	web "github.com/go-home-admin/go-admin/web"
 	providers_2 "github.com/go-home-admin/home/bootstrap/providers"
 	services "github.com/go-home-admin/home/bootstrap/services"
+	filesystem "github.com/go-home-admin/home/bootstrap/services/filesystem"
 )
 
 var _AppSingle *App
@@ -29,6 +31,8 @@ func NewApp() *App {
 		_AppSingle.RedisProvider = providers_2.NewRedisProvider()
 		_AppSingle.Route = NewRoute()
 		_AppSingle.Response = NewResponse()
+		_AppSingle.Provider = web.NewProvider()
+		_AppSingle.Local = filesystem.NewLocal()
 		providers_2.AfterProvider(_AppSingle, "")
 	}
 	return _AppSingle

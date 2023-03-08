@@ -1,13 +1,18 @@
 package amis
 
 import (
+	"crypto/md5"
 	"encoding/json"
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/go-home-admin/home/bootstrap/services/database"
 	"github.com/sirupsen/logrus"
 	"strconv"
 )
 
-func NewForm() *Form {
+func NewForm(ctx *gin.Context) *Form {
 	return &Form{
+		ctx:      ctx,
 		Type:     "form",
 		Body:     make([]interface{}, 0),
 		itemList: make(map[string]IsFormItem),
@@ -16,6 +21,7 @@ func NewForm() *Form {
 }
 
 type Form struct {
+	ctx   *gin.Context
 	Id    string        `json:"id,omitempty"`
 	Type  string        `json:"type,omitempty"`
 	Title string        `json:"title,omitempty"`
@@ -35,12 +41,62 @@ type Form struct {
 	size string
 	// 默认更新的值
 	data map[string]interface{}
+
+	createBefore []func(form *Form)
+	updateBefore []func(form *Form)
+
+	createAfter []func(primaryVal interface{}, post map[string]interface{}, ctx *gin.Context)
+	updateAfter []func(primaryVal interface{}, post map[string]interface{}, ctx *gin.Context)
 }
 
 type FormModeHorizontal struct {
 	LeftFixed string `json:"leftFixed"`
 }
 
+// CreateBefore 创建前执行
+func (f *Form) CreateBefore(fun func(form *Form)) *Form {
+	if f.createBefore == nil {
+		f.createBefore = make([]func(form *Form), 0)
+	}
+	f.createBefore = append(f.createBefore, fun)
+	return f
+}
+
+// UpdateBefore 更新前执行
+func (f *Form) UpdateBefore(fun func(form *Form)) *Form {
+	if f.createBefore == nil {
+		f.updateBefore = make([]func(form *Form), 0)
+	}
+	f.updateBefore = append(f.updateBefore, fun)
+	return f
+}
+
+// SaveAfter 创建或者更新后执行
+func (f *Form) SaveAfter(fun func(primaryVal interface{}, post map[string]interface{}, ctx *gin.Context)) *Form {
+	f.CreateAfter(fun)
+	f.UpdateAfter(fun)
+	return f
+}
+
+// CreateAfter 创建后执行
+func (f *Form) CreateAfter(fun func(primaryVal interface{}, post map[string]interface{}, ctx *gin.Context)) *Form {
+	if f.createBefore == nil {
+		f.createAfter = make([]func(primaryVal interface{}, post map[string]interface{}, ctx *gin.Context), 0)
+	}
+	f.createAfter = append(f.createAfter, fun)
+	return f
+}
+
+// UpdateAfter 更新后执行
+func (f *Form) UpdateAfter(fun func(primaryVal interface{}, post map[string]interface{}, ctx *gin.Context)) *Form {
+	if f.createBefore == nil {
+		f.updateAfter = make([]func(primaryVal interface{}, post map[string]interface{}, ctx *gin.Context), 0)
+	}
+	f.updateAfter = append(f.updateAfter, fun)
+	return f
+}
+
+// SetData 设置默认值
 func (f *Form) SetData(i map[string]interface{}) *Form {
 	f.data = i
 	return f
@@ -90,6 +146,25 @@ func (f *Form) Items() map[string]IsFormItem {
 	return f.itemList
 }
 
+func (f *Form) AddCreatedAndUpdatedAt() {
+	f.AddCreatedAt()
+	f.AddUpdatedAt()
+}
+
+// AddCreatedAt 添加创建时间字段
+func (f *Form) AddCreatedAt() {
+	f.CreateBefore(func(form *Form) {
+		form.AddData("created_at", database.Now())
+	})
+}
+
+// AddUpdatedAt 添加更新时间字段
+func (f *Form) AddUpdatedAt() {
+	f.UpdateBefore(func(form *Form) {
+		form.AddData("updated_at", database.Now())
+	})
+}
+
 type IsFormItem interface {
 	GetName() string
 	GetValue(row map[string]interface{}) interface{}
@@ -102,7 +177,7 @@ type FormItem struct {
 	Type       string `json:"type"`
 	Name       string `json:"name"`
 
-	save func(old interface{}) interface{}
+	save []func(old interface{}) interface{}
 	opt  map[string]interface{}
 }
 
@@ -146,7 +221,11 @@ func (f *FormItem) GetValue(row map[string]interface{}) interface{} {
 		got = v
 	}
 	if f.save != nil {
-		got = f.save(got)
+		for _, f2 := range f.save {
+			if got != nil {
+				got = f2(got)
+			}
+		}
 	}
 	return got
 }
@@ -156,8 +235,32 @@ func (f *FormItem) Placeholder(v string) *FormItem {
 	return f
 }
 
+// SkipEmpty 不保存空的值
+func (f *FormItem) SkipEmpty() *FormItem {
+	f.SetSave(func(old interface{}) interface{} {
+		if old != nil {
+			switch old.(type) {
+			case string:
+				if old.(string) == "" {
+					return nil
+				}
+			}
+		}
+		return old
+	})
+	return f
+}
+
+// NotSave 不保存, 只是显示组件
+func (f *FormItem) NotSave() *FormItem {
+	f.SetSave(func(old interface{}) interface{} {
+		return nil
+	})
+	return f
+}
+
 func (f *FormItem) SetSave(fun func(old interface{}) interface{}) {
-	f.save = fun
+	f.save = append(f.save, fun)
 }
 
 func (f *FormItem) SaveInt() {
@@ -175,5 +278,20 @@ func (f *FormItem) SaveInt() {
 		}
 
 		return got
+	})
+}
+
+// SaveMd5 使用md5保存
+func (f *FormItem) SaveMd5(sec ...string) {
+	f.SetSave(func(old interface{}) interface{} {
+		if s, ok := old.(string); ok {
+			secStr := ""
+			for _, s2 := range sec {
+				secStr += s2
+			}
+			data := []byte(s + secStr)
+			return fmt.Sprintf("%x", md5.Sum(data))
+		}
+		return ""
 	})
 }

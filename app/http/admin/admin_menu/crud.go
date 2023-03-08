@@ -32,6 +32,8 @@ func (c *CrudContext) Form(form *amis.Form) {
 	form.EditorJson("meta", "元数据")
 	form.Input("sort", "排序")
 	form.Input("api_list", "api")
+	form.AddCreatedAt()
+	form.AddUpdatedAt()
 }
 
 func (c *Controller) GinHandleCurd(ctx *gin.Context) {

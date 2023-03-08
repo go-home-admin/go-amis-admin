@@ -3,9 +3,8 @@ package admin_user
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-home-admin/amis"
-	"github.com/go-home-admin/go-admin/app"
 	"github.com/go-home-admin/go-admin/app/entity/admin"
-	"github.com/go-home-admin/home/bootstrap/services/database"
+	"github.com/go-home-admin/home/bootstrap/utils"
 )
 
 func (c *CrudContext) Common() {
@@ -24,15 +23,17 @@ func (c *CrudContext) Table(curd *amis.Crud) {
 
 func (c *CrudContext) Form(form *amis.Form) {
 	form.Input("username", "账户")
-	form.Password("password", "密码").SetSave(func(old interface{}) interface{} {
-		if old.(string) == "" {
-			return nil
-		}
-		return app.MD5(old.(string))
-	})
+	form.InputPassword("password", "密码").SkipEmpty().SaveMd5()
 	form.Input("name", "显示名称")
-	form.Input("avatar", "头像")
-	form.AddData("created_at", database.Now())
+	form.InputImage("avatar", "头像").Update("avatar")
+	form.InputOptions("roles", "角色").SetModel(admin.NewOrmAdminRoles().Select("id as value, name as label"))
+	form.AddCreatedAndUpdatedAt()
+
+	form.SaveAfter(func(primaryVal interface{}, post map[string]interface{}, ctx *gin.Context) {
+		roles, _ := post["roles"]
+
+		utils.Dump(roles)
+	})
 }
 
 func (c *Controller) GinHandleCurd(ctx *gin.Context) {

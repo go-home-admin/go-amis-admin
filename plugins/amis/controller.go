@@ -3,6 +3,7 @@ package amis
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-home-admin/home/app/http"
 	"github.com/sirupsen/logrus"
@@ -74,25 +75,26 @@ func (c *CurdController) GetPrimary() string {
 	return "id"
 }
 
-func (c *CurdController) GetFromData(ctx *gin.Context) (map[string]interface{}, map[string]interface{}) {
+// GetFromData 预处理提交参数
+func (c *CurdController) GetFromData(ctx *gin.Context, form *Form) (interface{}, map[string]interface{}, error) {
 	by, _ := ctx.GetRawData()
-	var m map[string]interface{}
-	err := json.Unmarshal(by, &m)
+	post := map[string]interface{}{}
+	err := json.Unmarshal(by, &post)
 	if err != nil {
 		logrus.Error(err)
-		return nil, nil
+		return nil, post, err
 	}
-	form := NewForm()
-	c.Crud.Form(form)
 	data := form.data
 	for _, item := range form.Items() {
-		v := item.GetValue(m)
+		v := item.GetValue(post)
 		if v != nil {
-			data[item.GetName()] = item.GetValue(m)
+			data[item.GetName()] = v
 		}
 	}
-
-	return data, m
+	postStr, _ := json.Marshal(data)
+	m := c.model.GetTableInfo()
+	_ = json.Unmarshal(postStr, &m)
+	return m, post, nil
 }
 
 func GinHandleCurd(ctx *gin.Context, controller CurdSave) {
@@ -128,6 +130,21 @@ func (c *CurdController) CurdAll() {
 	}
 }
 
+// 便捷闭包函数
+const _route_ = "_route_"
+
+func AddCallRoutes(ctx *gin.Context, action string, call func(ctx *gin.Context)) {
+	var routes map[string]func(ctx2 *gin.Context)
+	t, has := ctx.Get(_route_)
+	if has {
+		routes = t.(map[string]func(ctx2 *gin.Context))
+	} else {
+		routes = map[string]func(ctx2 *gin.Context){}
+	}
+	routes[action] = call
+	ctx.Set(_route_, routes)
+}
+
 func (c *CurdController) CurdOne(action string) {
 	ctx := c.Context
 	controller := c.Crud
@@ -145,6 +162,19 @@ func (c *CurdController) CurdOne(action string) {
 			i.Delete(ctx)
 		}
 	default:
+		// 自定义的路由
+		form := NewForm(ctx)
+		c.Crud.Form(form)
+		routes, has := ctx.Get(_route_)
+		if has {
+			if displayRoutes, ok := routes.(map[string]func(*gin.Context)); ok {
+				if call, ok := displayRoutes[action]; ok {
+					call(ctx)
+					return
+				}
+			}
+		}
+
 		http.NewContext(ctx).Fail(errors.New("不支持的路由"))
 	}
 }
@@ -154,7 +184,7 @@ func (c *CurdController) Index(ctx *gin.Context) {
 	context := http.NewContext(ctx)
 
 	crud := NewCurd(ctx)
-	form := NewForm()
+	form := NewForm(ctx)
 
 	c.Crud.Table(crud)
 	c.Crud.Form(form)
@@ -215,49 +245,63 @@ func (c *CurdController) List(ctx *gin.Context) {
 }
 
 func (c *CurdController) Create(ctx *gin.Context) {
-	data, _ := c.GetFromData(ctx)
-
-	td := c.model.GetDB().Create(&data)
+	form := NewForm(ctx)
+	c.Crud.Form(form)
+	for _, f := range form.createBefore {
+		f(form)
+	}
+	data, post, _ := c.GetFromData(ctx, form)
+	td := c.model.GetDB().Create(data)
 	if td.Error != nil {
 		logrus.Error(td.Error)
 		http.NewContext(ctx).Fail(errors.New("创建失败"))
 		return
 	}
+	for _, f := range form.createAfter {
+		_, primaryVal := getPrimaryKey(data)
+		f(primaryVal, post, ctx)
+	}
+
 	http.NewContext(ctx).Success(nil)
 }
 
 func (c *CurdController) Update(ctx *gin.Context) {
-	data, all := c.GetFromData(ctx)
-	primary := c.GetPrimary()
-	primaryValStringOrFloat64, ok := all[primary]
-	if !ok {
-		primaryValStringOrFloat64 = ctx.Query(primary)
-		if primaryValStringOrFloat64 == "" {
-			logrus.Error("必须要有主键数据才能更新, 当前的主建=" + primary)
+	form := NewForm(ctx)
+	c.Crud.Form(form)
+	if form.updateBefore != nil {
+
+	}
+	data, post, _ := c.GetFromData(ctx, form)
+	key, primaryVal := getPrimaryKey(data)
+	if key == "" {
+		http.NewContext(ctx).Fail(errors.New("curl只能更新有自增字段的模型"))
+		return
+	}
+
+	if primaryVal == nil || primaryVal == "" || primaryVal == 0 || fmt.Sprintf("%v", primaryVal) == "0" || fmt.Sprintf("%v", primaryVal) == "" {
+		primaryVal = ctx.Query(key)
+		if primaryVal == "" {
+			logrus.Error("必须要有主键数据才能更新, 当前的主建=" + key)
 			return
 		}
 	}
-	var primaryVal interface{}
-	switch primaryValStringOrFloat64.(type) {
-	case string:
-		primaryVal = primaryValStringOrFloat64
-	case float64:
-		primaryVal = int(primaryValStringOrFloat64.(float64))
-	}
 
-	td := c.model.GetDB().Where(primary+" = ?", primaryVal).Updates(&data)
+	td := c.model.GetDB().Where(key+" = ?", primaryVal).Updates(data)
 	if td.Error != nil {
 		logrus.Error(td.Error)
 		http.NewContext(ctx).Fail(errors.New("更新失败"))
 		return
 	}
 
+	for _, f := range form.updateAfter {
+		f(primaryVal, post, ctx)
+	}
+
 	http.NewContext(ctx).Success(nil)
 }
 
 func (c *CurdController) Delete(ctx *gin.Context) {
-	primary := c.GetPrimary()
-	var primaryVal interface{}
+	primary, primaryVal := getPrimaryKey(c.model.GetTableInfo())
 	primaryVal, ok := ctx.GetQuery(primary)
 	if !ok {
 		logrus.Error("url必须要有主键数据才能删除, 当前的主建=" + primary)

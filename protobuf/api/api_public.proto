@@ -11,7 +11,7 @@ service Public {
 
   // 首页
   rpc Home(HomeRequest)returns(HomeResponse){
-    option (http.Get) = "/";
+    option (http.Get) = "/home";
   }
 }
 

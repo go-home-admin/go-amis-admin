@@ -7,7 +7,7 @@ import (
 )
 
 func TestGetStructFieldsInfo(t *testing.T) {
-	gotFields := GetStructFieldsInfo(admin.AdminUsers{})
+	gotFields := GetStructFieldsInfo(admin.AdminRoles{})
 
 	for _, field := range gotFields {
 		fmt.Printf("curd.Column(\"%v\", \"%v\")\n", field["comment"], field["name"])

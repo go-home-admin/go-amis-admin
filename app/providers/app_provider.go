@@ -1,9 +1,11 @@
 package providers
 
 import (
+	"github.com/go-home-admin/go-admin/web"
 	"github.com/go-home-admin/home/bootstrap/constraint"
 	"github.com/go-home-admin/home/bootstrap/providers"
 	"github.com/go-home-admin/home/bootstrap/services"
+	"github.com/go-home-admin/home/bootstrap/services/filesystem"
 )
 
 // App @Bean
@@ -17,6 +19,13 @@ type App struct {
 
 	*Route    `inject:""`
 	*Response `inject:""`
+
+	*web.Provider     `inject:""`
+	*filesystem.Local `inject:""`
+}
+
+func (a *App) Boot() {
+
 }
 
 func (a *App) Run(servers []constraint.KernelServer) {

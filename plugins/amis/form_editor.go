@@ -1,5 +1,6 @@
 package amis
 
+// Editor 编辑器
 func (f *Form) Editor(name, label string) *FormItemEditor {
 	item := &FormItemEditor{
 		FormItem: NewItem(name, label, "editor"),

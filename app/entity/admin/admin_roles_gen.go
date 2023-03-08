@@ -11,11 +11,12 @@ import (
 )
 
 type AdminRoles struct {
-	Id        uint32         `gorm:"column:id;autoIncrement;type:int unsigned;primaryKey;comment:'id'" json:"id"`                                      // id
-	Name      string         `gorm:"column:name;type:varchar(50);index:laravel_admin_roles_name_unique,class:BTREE,unique;comment:'角色名'" json:"name"`  // 角色名
-	Slug      string         `gorm:"column:slug;type:varchar(50);index:laravel_admin_roles_slug_unique,class:BTREE,unique;comment:'默认权限'" json:"slug"` // 默认权限
-	CreatedAt *database.Time `gorm:"column:created_at;type:timestamp;comment:'created_at'" json:"created_at"`                                          // created_at
-	UpdatedAt *database.Time `gorm:"column:updated_at;type:timestamp;comment:'updated_at'" json:"updated_at"`                                          // updated_at
+	Id        uint32         `gorm:"column:id;autoIncrement;type:int unsigned;primaryKey;comment:'id'" json:"id"`                                     // id
+	Name      string         `gorm:"column:name;type:varchar(50);index:laravel_admin_roles_name_unique,class:BTREE,unique;comment:'角色名'" json:"name"` // 角色名
+	Slug      string         `gorm:"column:slug;type:varchar(50);default:;comment:'默认权限'" json:"slug"`                                                // 默认权限
+	Remark    string         `gorm:"column:remark;type:varchar(255);default:;comment:'备注'" json:"remark"`                                             // 备注
+	CreatedAt *database.Time `gorm:"column:created_at;type:timestamp;comment:'created_at'" json:"created_at"`                                         // created_at
+	UpdatedAt *database.Time `gorm:"column:updated_at;type:timestamp;comment:'updated_at'" json:"updated_at"`                                         // updated_at
 }
 
 func (receiver *AdminRoles) TableName() string {
@@ -386,28 +387,8 @@ func (orm *OrmAdminRoles) WhereSlug(val string) *OrmAdminRoles {
 	orm.db.Where("`slug` = ?", val)
 	return orm
 }
-func (orm *OrmAdminRoles) InsertGetSlug(row *AdminRoles) string {
-	orm.db.Create(row)
-	return row.Slug
-}
-func (orm *OrmAdminRoles) WhereSlugIn(val []string) *OrmAdminRoles {
-	orm.db.Where("`slug` IN ?", val)
-	return orm
-}
-func (orm *OrmAdminRoles) WhereSlugGt(val string) *OrmAdminRoles {
-	orm.db.Where("`slug` > ?", val)
-	return orm
-}
-func (orm *OrmAdminRoles) WhereSlugGte(val string) *OrmAdminRoles {
-	orm.db.Where("`slug` >= ?", val)
-	return orm
-}
-func (orm *OrmAdminRoles) WhereSlugLt(val string) *OrmAdminRoles {
-	orm.db.Where("`slug` < ?", val)
-	return orm
-}
-func (orm *OrmAdminRoles) WhereSlugLte(val string) *OrmAdminRoles {
-	orm.db.Where("`slug` <= ?", val)
+func (orm *OrmAdminRoles) WhereRemark(val string) *OrmAdminRoles {
+	orm.db.Where("`remark` = ?", val)
 	return orm
 }
 func (orm *OrmAdminRoles) WhereCreatedAt(val database.Time) *OrmAdminRoles {
