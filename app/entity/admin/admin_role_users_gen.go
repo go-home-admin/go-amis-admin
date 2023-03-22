@@ -126,6 +126,11 @@ func (orm *OrmAdminRoleUsers) Exists() (bool, error) {
 	return dest.H == 1, db.Error
 }
 
+func (orm *OrmAdminRoleUsers) Unscoped() *OrmAdminRoleUsers {
+	orm.db.Unscoped()
+	return orm
+}
+
 // ------------ 以下是单表独有的函数, 便捷字段条件, Laravel风格操作 ---------
 
 func (orm *OrmAdminRoleUsers) Insert(row *AdminRoleUsers) error {

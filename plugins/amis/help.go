@@ -55,3 +55,13 @@ func getPrimaryKey(model interface{}) (string, interface{}) {
 	// 获取主键值
 	return primaryName, primaryKey.Interface()
 }
+
+// ToCamelCase 转驼峰
+func ToCamelCase(str string) string {
+	words := strings.Split(str, "_")
+	for i, word := range words {
+		words[i] = strings.Title(word)
+	}
+	result := strings.Join(words, "")
+	return result
+}

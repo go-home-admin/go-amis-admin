@@ -1,0 +1,11 @@
+{
+  "admin_users": [
+    {
+      "type": "many2many",
+      "table": "admin_roles",
+      "relationship_table": "admin_role_users",
+      "join_foreign_key": "user_id",
+      "join_target_key": "role_id"
+    }
+  ]
+}

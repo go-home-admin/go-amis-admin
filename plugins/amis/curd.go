@@ -168,6 +168,8 @@ type ColumnConfig struct {
 	// opt 会合并到整个ColumnConfig上再输出到前端
 	opt     map[string]interface{}
 	display func(v interface{}) interface{}
+	// 允许跳过, 不查询sql
+	skip bool
 }
 
 // MarshalJSON opt 会合并到整个ColumnConfig上再输出到前端
@@ -191,6 +193,11 @@ func (c *ColumnConfig) SetOptions(k string, v interface{}) {
 
 func (c *ColumnConfig) Display(f func(v interface{}) interface{}) *ColumnConfig {
 	c.display = f
+	return c
+}
+
+func (c *ColumnConfig) Skip() *ColumnConfig {
+	c.skip = true
 	return c
 }
 

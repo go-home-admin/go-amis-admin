@@ -206,30 +206,35 @@ func (c *CurdController) List(ctx *gin.Context) {
 	got := NewCurdData()
 	got.Page = GetInt(c.Context, "page", 1)
 	list := make([]map[string]interface{}, 0)
-	c.model.GetDB().Count(&got.Total)
+
+	queryDB := c.model.GetDB().Session(&gorm.Session{})
+	queryDB.Count(&got.Total)
 	if got.Total > 0 {
 		crud := NewCurd(ctx)
 		c.Crud.Table(crud)
 
 		PageSize := GetInt(c.Context, "perPage", 20)
-		orm := c.model.GetDB().Offset((got.Page - 1) * PageSize).Limit(PageSize)
+		queryDB = queryDB.Offset((got.Page - 1) * PageSize).Limit(PageSize)
 		if crud.enSelect {
 			query := ""
 			// 只读取设置了columns才读取数据库
 			for _, columnT := range crud.columns {
-				if column, ok := columnT.(*ColumnConfig); ok {
-					query += column.Name + ","
+				if column, ok := columnT.(*ColumnConfig); ok && !column.skip {
+					if strings.Index(column.Name, ".") == -1 {
+						query += column.Name + ","
+					}
 				}
 			}
-			orm.Select(strings.Trim(query, ","))
+			queryDB = queryDB.Select(strings.Trim(query, ","))
 		}
-		tx := orm.Find(&list)
+		tx := queryDB.Find(&list)
 		if tx.Error != nil {
 			logrus.Error(tx.Error)
 		}
-
+		// 自动查询分表数据
+		c.authSelect(list, crud.columns)
+		// 后端值转换, 后台类型的状态转换登陆
 		for _, m := range list {
-			// 后端值转换
 			for _, columnT := range crud.columns {
 				if column, ok := columnT.(*ColumnConfig); ok {
 					if column.display != nil {
@@ -244,6 +249,7 @@ func (c *CurdController) List(ctx *gin.Context) {
 	http.NewContext(ctx).Success(got)
 }
 
+// Create 创建数据
 func (c *CurdController) Create(ctx *gin.Context) {
 	form := NewForm(ctx)
 	c.Crud.Form(form)

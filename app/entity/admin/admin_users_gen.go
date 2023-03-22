@@ -11,14 +11,15 @@ import (
 )
 
 type AdminUsers struct {
-	Id        uint32         `gorm:"column:id;autoIncrement;type:int unsigned;primaryKey;comment:'id'" json:"id"`                                                 // id
-	Username  string         `gorm:"column:username;type:varchar(190);index:laravel_admin_users_username_unique,class:BTREE,unique;comment:'账户'" json:"username"` // 账户
-	Password  string         `gorm:"column:password;type:varchar(60);comment:'密码'" json:"password"`                                                               // 密码
-	Name      string         `gorm:"column:name;type:varchar(255);comment:'显示名称'" json:"name"`                                                                    // 显示名称
-	Avatar    *string        `gorm:"column:avatar;type:varchar(255);comment:'头像'" json:"avatar"`                                                                  // 头像
-	DeletedAt *database.Time `gorm:"column:deleted_at;type:timestamp;comment:'软删除'" json:"deleted_at"`                                                            // 软删除
-	CreatedAt *database.Time `gorm:"column:created_at;type:timestamp;comment:'created_at'" json:"created_at"`                                                     // created_at
-	UpdatedAt *database.Time `gorm:"column:updated_at;type:timestamp;comment:'updated_at'" json:"updated_at"`                                                     // updated_at
+	Id         uint32         `gorm:"column:id;autoIncrement;type:int unsigned;primaryKey;comment:'id'" json:"id"`                                                 // id
+	Username   string         `gorm:"column:username;type:varchar(190);index:laravel_admin_users_username_unique,class:BTREE,unique;comment:'账户'" json:"username"` // 账户
+	Password   string         `gorm:"column:password;type:varchar(60);comment:'密码'" json:"password"`                                                               // 密码
+	Name       string         `gorm:"column:name;type:varchar(255);comment:'显示名称'" json:"name"`                                                                    // 显示名称
+	Avatar     *string        `gorm:"column:avatar;type:varchar(255);comment:'头像'" json:"avatar"`                                                                  // 头像
+	DeletedAt  gorm.DeletedAt `gorm:"column:deleted_at;type:timestamp;comment:'软删除'" json:"deleted_at"`                                                            // 软删除
+	CreatedAt  *database.Time `gorm:"column:created_at;type:timestamp;comment:'created_at'" json:"created_at"`                                                     // created_at
+	UpdatedAt  *database.Time `gorm:"column:updated_at;type:timestamp;comment:'updated_at'" json:"updated_at"`                                                     // updated_at
+	AdminRoles []*AdminRoles  `gorm:"many2many:admin_role_users;joinForeignKey:user_id;joinReferences:role_id;"`
 }
 
 func (receiver *AdminUsers) TableName() string {
@@ -128,6 +129,11 @@ func (orm *OrmAdminUsers) Exists() (bool, error) {
 	}{}
 	db := orm.db.Select("1 as h").Limit(1).Find(dest)
 	return dest.H == 1, db.Error
+}
+
+func (orm *OrmAdminUsers) Unscoped() *OrmAdminUsers {
+	orm.db.Unscoped()
+	return orm
 }
 
 // ------------ 以下是单表独有的函数, 便捷字段条件, Laravel风格操作 ---------

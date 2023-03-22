@@ -3,8 +3,9 @@ package admin_user
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-home-admin/amis"
+	"github.com/go-home-admin/go-admin/app"
 	"github.com/go-home-admin/go-admin/app/entity/admin"
-	"github.com/go-home-admin/home/bootstrap/utils"
+	"github.com/sirupsen/logrus"
 )
 
 func (c *CrudContext) Common() {
@@ -17,6 +18,7 @@ func (c *CrudContext) Table(curd *amis.Crud) {
 	curd.Column("id", "id")
 	curd.Column("账户", "username")
 	curd.Column("显示名称", "name")
+	curd.Column("跨表读取", "admin_roles.name")
 	curd.Column("头像", "avatar").Image().Height("50px")
 	curd.Column("创建时间", "created_at").Date()
 }
@@ -28,11 +30,21 @@ func (c *CrudContext) Form(form *amis.Form) {
 	form.InputImage("avatar", "头像").Update("avatar")
 	form.InputOptions("roles", "角色").SetModel(admin.NewOrmAdminRoles().Select("id as value, name as label"))
 	form.AddCreatedAndUpdatedAt()
-
+	// 同时更新依赖表
 	form.SaveAfter(func(primaryVal interface{}, post map[string]interface{}, ctx *gin.Context) {
-		roles, _ := post["roles"]
-
-		utils.Dump(roles)
+		roles, has := post["roles"]
+		userID := app.Int32(primaryVal)
+		admin.NewOrmAdminRoleUsers().WhereUserId(userID).Delete()
+		if has {
+			if role, ok := roles.(string); ok {
+				if err := admin.NewOrmAdminRoleUsers().Insert(&admin.AdminRoleUsers{
+					RoleId: app.Int32(role),
+					UserId: userID,
+				}); err != nil {
+					logrus.Error(err)
+				}
+			}
+		}
 	})
 }
 

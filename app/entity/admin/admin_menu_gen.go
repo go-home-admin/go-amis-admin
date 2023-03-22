@@ -134,6 +134,11 @@ func (orm *OrmAdminMenu) Exists() (bool, error) {
 	return dest.H == 1, db.Error
 }
 
+func (orm *OrmAdminMenu) Unscoped() *OrmAdminMenu {
+	orm.db.Unscoped()
+	return orm
+}
+
 // ------------ 以下是单表独有的函数, 便捷字段条件, Laravel风格操作 ---------
 
 func (orm *OrmAdminMenu) Insert(row *AdminMenu) error {
