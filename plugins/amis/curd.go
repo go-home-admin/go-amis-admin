@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-home-admin/home/bootstrap/services/database"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -48,10 +49,19 @@ type Crud struct {
 	opt       map[string]interface{}
 	// 开启强制过滤, 默认读取整个表字段, 如果设置为true, 只读取Column里的字段
 	enSelect bool
+	// 条件信息
+	where []func(ctx *gin.Context, db *gorm.DB)
 }
 
-// EnSelect 开启强制过滤, 默认读取整个表字段, 如果设置为true, 只读取Column里的字段
-func (c *Crud) EnSelect() {
+func (c *Crud) Where(fn func(ctx *gin.Context, db *gorm.DB)) {
+	if c.where == nil {
+		c.where = make([]func(ctx *gin.Context, db *gorm.DB), 0)
+	}
+	c.where = append(c.where, fn)
+}
+
+// EnOnlySelect 开启强制过滤, 默认读取整个表字段, 如果设置为true, 只读取Column里的字段
+func (c *Crud) EnOnlySelect() {
 	c.enSelect = true
 }
 
@@ -247,6 +257,7 @@ func (c *ColumnConfig) List() *ColumnConfig {
 // SearchableInput 自动生成查询
 // SearchableInput(label, name...)
 func (c *ColumnConfig) SearchableInput(opts ...string) *FormItemText {
+	c.curl.AutoGenerateFilter()
 	name := c.Name
 	label := c.Label
 	switch len(opts) {
@@ -262,5 +273,11 @@ func (c *ColumnConfig) SearchableInput(opts ...string) *FormItemText {
 	}
 	c.Type = ""
 	c.Searchable = item
+	c.curl.Where(func(ctx *gin.Context, db *gorm.DB) {
+		v := ctx.Query(name)
+		if v != "" {
+			db.Where(fmt.Sprintf("`%s` = ?", name), v)
+		}
+	})
 	return item
 }

@@ -206,13 +206,15 @@ func (c *CurdController) List(ctx *gin.Context) {
 	got := NewCurdData()
 	got.Page = GetInt(c.Context, "page", 1)
 	list := make([]map[string]interface{}, 0)
+	crud := NewCurd(ctx)
+	c.Crud.Table(crud)
 
-	queryDB := c.model.GetDB().Session(&gorm.Session{})
+	queryDB := c.model.GetDB()
+	for _, fn := range crud.where {
+		fn(ctx, queryDB)
+	}
 	queryDB.Count(&got.Total)
 	if got.Total > 0 {
-		crud := NewCurd(ctx)
-		c.Crud.Table(crud)
-
 		PageSize := GetInt(c.Context, "perPage", 20)
 		queryDB = queryDB.Offset((got.Page - 1) * PageSize).Limit(PageSize)
 		if crud.enSelect {
