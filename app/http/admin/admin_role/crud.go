@@ -23,8 +23,7 @@ func (c *CrudContext) Form(form *amis.Form) {
 	form.Input("name", "角色名")
 	form.Input("slug", "默认权限")
 	form.Textarea("remark", "备注")
-	form.AddCreatedAt()
-	form.AddUpdatedAt()
+	form.AddCreatedAndUpdatedAt()
 }
 
 func (c *Controller) GinHandleCurd(ctx *gin.Context) {
