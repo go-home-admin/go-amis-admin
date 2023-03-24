@@ -34,7 +34,7 @@ type Form struct {
 	// 初始化表单
 	InitApi string `json:"initApi,omitempty"`
 	// 如果需要设置提交连接
-	Api Api `json:"api,omitempty"`
+	Api Url `json:"api,omitempty"`
 
 	itemList map[string]IsFormItem
 	// 如果包装到dialog, 可以设置到dialog组件
@@ -132,12 +132,10 @@ func (f *Form) AddBody(i interface{}) {
 	}
 }
 
-func (f *Form) SetApi(url, method string) *Form {
+func (f *Form) SetApi(url Url, method string) *Form {
 	newForm := *f
-	newForm.Api = Api{
-		Method: method,
-		Url:    url,
-	}
+	url.Method(method)
+	newForm.Api = url
 
 	return &newForm
 }

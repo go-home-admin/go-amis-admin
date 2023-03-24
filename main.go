@@ -4,6 +4,7 @@ import (
 	"embed"
 	"github.com/go-home-admin/go-admin/app/http"
 	"github.com/go-home-admin/go-admin/app/providers"
+	"github.com/go-home-admin/go-admin/app/queues"
 	"github.com/go-home-admin/home/bootstrap/constraint"
 	fp "github.com/go-home-admin/home/bootstrap/providers"
 )
@@ -26,6 +27,6 @@ func main() {
 		//	logrus.Info("我才可以启动定时服务")
 		//}),
 		// Job消费服务
-		// queues.GetServer(),
+		queues.GetServer(),
 	})
 }

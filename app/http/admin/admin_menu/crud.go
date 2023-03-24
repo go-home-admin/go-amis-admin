@@ -29,7 +29,7 @@ func (c *CrudContext) Form(form *amis.Form) {
 	form.Input("component", "组件")
 	form.Input("path", "地址")
 	form.Input("redirect", "重定向")
-	form.EditorJson("meta", "元数据")
+	form.JsonSchema("meta", "元数据")
 	form.Input("sort", "排序")
 	form.Input("api_list", "api")
 	form.AddCreatedAndUpdatedAt()

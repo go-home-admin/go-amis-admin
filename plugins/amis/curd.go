@@ -13,6 +13,7 @@ type CurdData struct {
 	Items []interface{} `json:"items"`
 	Total int64         `json:"total"`
 	Page  int           `json:"page"`
+	opt   map[string]interface{}
 }
 
 func NewCurdData() *CurdData {
@@ -20,7 +21,13 @@ func NewCurdData() *CurdData {
 		Items: make([]interface{}, 0),
 		Total: 0,
 		Page:  0,
+		opt:   map[string]interface{}{},
 	}
+}
+
+// SetOptions 自带参数
+func (c *CurdData) SetOptions(k string, v interface{}) {
+	c.opt[k] = v
 }
 
 func (c *CurdData) SetItems(items []interface{}) {
@@ -31,11 +38,26 @@ func (c *CurdData) AddItems(item interface{}) {
 	c.Items = append(c.Items, item)
 }
 
+func (c *CurdData) MarshalJSON() ([]byte, error) {
+	newStruct := *c
+	if len(c.opt) == 0 {
+		return json.Marshal(newStruct)
+	}
+	mm := map[string]interface{}{}
+	by, _ := json.Marshal(newStruct)
+	_ = json.Unmarshal(by, &mm)
+	for k, v := range c.opt {
+		mm[k] = v
+	}
+	return json.Marshal(mm)
+}
+
 func NewCurd(ctx *gin.Context) *Crud {
 	return &Crud{
 		ctx:     ctx,
 		columns: make([]interface{}, 0),
 		opt:     map[string]interface{}{},
+		api:     GetUrl(ctx, "/list"),
 	}
 }
 
@@ -51,6 +73,11 @@ type Crud struct {
 	enSelect bool
 	// 条件信息
 	where []func(ctx *gin.Context, db *gorm.DB)
+	api   Url
+}
+
+func (c *Crud) Api() Url {
+	return c.api
 }
 
 func (c *Crud) Where(fn func(ctx *gin.Context, db *gorm.DB)) {
@@ -72,7 +99,7 @@ func (c *Crud) SetOptions(k string, v interface{}) {
 // CurdJsonConfig 这个对象直接响应到前端json
 type CurdJsonConfig struct {
 	Type          string        `json:"type,omitempty"`
-	Api           string        `json:"api,omitempty"`
+	Api           Url           `json:"api,omitempty"`
 	SyncLocation  bool          `json:"syncLocation,omitempty"`
 	Columns       []interface{} `json:"columns,omitempty"`
 	HeaderToolbar []interface{} `json:"headerToolbar,omitempty"`
@@ -98,7 +125,7 @@ func (c *Crud) ToAmisJson() *CurdJsonConfig {
 		Type:          "crud",
 		SyncLocation:  false,
 		HeaderToolbar: c.headerToolbar,
-		Api:           GetUrl(c.ctx, "/list"),
+		Api:           c.api,
 		opt:           c.opt,
 	}
 	got.Columns = c.columns
@@ -245,8 +272,21 @@ func (c *ColumnConfig) Switch() *ColumnConfig {
 	return c
 }
 
-func (c *ColumnConfig) Mapping(list map[string]string) *ColumnConfig {
+// Mapping 默认值, 也可以传入定制
+// status(0,1,success,pending,queue,schedule,fail)
+func (c *ColumnConfig) Mapping(list ...interface{}) *ColumnConfig {
 	c.Type = "mapping"
+	if len(list) == 0 {
+		c.SetOptions("map", map[string]interface{}{
+			"*": map[string]string{
+				"type": "status",
+			},
+		})
+	} else {
+		for _, i := range list {
+			c.SetOptions("source", i)
+		}
+	}
 	return c
 }
 func (c *ColumnConfig) List() *ColumnConfig {

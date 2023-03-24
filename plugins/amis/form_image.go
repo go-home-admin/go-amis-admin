@@ -39,7 +39,7 @@ func (i *FormItemImage) Update(path string) *FormItemImage {
 			"url": url,
 		})
 	})
-	return i.Receiver(GetUrl(i.ctx, "/"+action))
+	return i.Receiver(GetUrl(i.ctx, "/"+action).String())
 }
 
 // Receiver 原始设置上传地址

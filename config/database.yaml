@@ -9,12 +9,12 @@ connections:
     database: env("DB_DATABASE", "home-mysql")
     username: env("DB_USERNAME", "root")
     password: env("DB_PASSWORD", "123456")
-#
-#  redis:
-#    driver: redis
-#    host: 127.0.0.1
-#    password: 123456
-#    port: 6379
+
+  redis:
+    driver: redis
+    host: env("REDIS_HOST", "10.100.0.65")
+    password: env("REDIS_PASSWORD", "")
+    port: env("REDIS_PORT", 6379)
 #  pg:
 #    driver: postgresql
 #    port: 5432

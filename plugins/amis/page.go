@@ -6,11 +6,6 @@ type AmisPage interface {
 	AddBody(i interface{})
 }
 
-type Api struct {
-	Method string `json:"method"`
-	Url    string `json:"url"`
-}
-
 func NewPage(title string) *Page {
 	return &Page{
 		Id:    "",

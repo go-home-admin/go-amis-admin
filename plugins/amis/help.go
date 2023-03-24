@@ -9,10 +9,39 @@ import (
 	"strings"
 )
 
+type Url map[string]interface{}
+
+func (u Url) Method(v string) Url {
+	u["method"] = v
+	return u
+}
+
+func (u Url) Url(v string) Url {
+	u["url"] = v
+	return u
+}
+
+func (u Url) Append(v string) Url {
+	u["url"] = u.String() + v
+	return u
+}
+
+func (u Url) Data(v interface{}) Url {
+	u["data"] = v
+	return u
+}
+
+func (u Url) String() string {
+	v := u["url"]
+	return v.(string)
+}
+
 // GetUrl action = /list | /edit | /del
-func GetUrl(ctx *gin.Context, action string) string {
-	domain := app.Config("app.url", "http://127.0.0.1")
-	return domain + ctx.Request.URL.RequestURI() + action
+func GetUrl(ctx *gin.Context, action string) Url {
+	return Url{
+		"method": "get",
+		"url":    app.Config("app.url", "http://127.0.0.1") + ctx.Request.URL.RequestURI() + action,
+	}
 }
 
 func GetInt(ctx *gin.Context, k string, def int) int {
@@ -64,4 +93,31 @@ func ToCamelCase(str string) string {
 	}
 	result := strings.Join(words, "")
 	return result
+}
+
+func structToMap(input interface{}) map[string]interface{} {
+	output := make(map[string]interface{})
+
+	// 获取 struct 的反射值
+	val := reflect.ValueOf(input)
+
+	// 如果不是 struct 类型或者是空指针，直接返回空 map
+	if val.Kind() != reflect.Struct || val.IsNil() {
+		return output
+	}
+
+	// 获取 struct 的类型信息
+	typ := val.Type()
+
+	// 遍历 struct 的字段
+	for i := 0; i < val.NumField(); i++ {
+		// 获取字段名和值
+		fieldName := typ.Field(i).Name
+		fieldValue := val.Field(i).Interface()
+
+		// 将字段名和值存储到 map 中
+		output[fieldName] = fieldValue
+	}
+
+	return output
 }

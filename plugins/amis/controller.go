@@ -76,6 +76,7 @@ func (c *CurdController) GetPrimary() string {
 }
 
 // GetFromData 预处理提交参数
+// 使用模型接收一次参数，防止数据类型不对
 func (c *CurdController) GetFromData(ctx *gin.Context, form *Form) (interface{}, map[string]interface{}, error) {
 	by, _ := ctx.GetRawData()
 	post := map[string]interface{}{}
@@ -91,9 +92,11 @@ func (c *CurdController) GetFromData(ctx *gin.Context, form *Form) (interface{},
 			data[item.GetName()] = v
 		}
 	}
+	// 处理数字类型, 防止和模型类型不一致, 同时删除多余参数
 	postStr, _ := json.Marshal(data)
 	m := c.model.GetTableInfo()
 	_ = json.Unmarshal(postStr, &m)
+	// 如果是更新操作，还要处理空值, 防止无法删除； 不在这里处理
 	return m, post, nil
 }
 
@@ -194,7 +197,7 @@ func (c *CurdController) Index(ctx *gin.Context) {
 	crud.AddCreate(form)
 	crud.Operation().AddButton("编辑").SetDialogForm(form.SetApi(GetUrl(ctx, "/edit?"+priStr), "put"))
 	delUrl := GetUrl(ctx, "/del?"+priStr)
-	crud.Operation().AddButton("删除").SetClassName("text-danger").SetAjax("确定要删除？", delUrl).Method = "delete"
+	crud.Operation().AddButton("删除").SetClassName("text-danger").SetAjax("确定要删除？", delUrl).Method("delete")
 
 	page := c.GetPage()
 	page.AddBody(crud.ToAmisJson())
@@ -294,7 +297,7 @@ func (c *CurdController) Update(ctx *gin.Context) {
 		}
 	}
 
-	td := c.model.GetDB().Where(key+" = ?", primaryVal).Updates(data)
+	td := c.model.GetDB().Where(key+" = ?", primaryVal).Updates(c.updateToMap(data, post))
 	if td.Error != nil {
 		logrus.Error(td.Error)
 		http.NewContext(ctx).Fail(errors.New("更新失败"))
@@ -306,6 +309,18 @@ func (c *CurdController) Update(ctx *gin.Context) {
 	}
 
 	http.NewContext(ctx).Success(nil)
+}
+
+// 模型更新转成map, 允许更新为空
+func (c *CurdController) updateToMap(model interface{}, post map[string]interface{}) map[string]interface{} {
+	output := make(map[string]interface{})
+	got := structToMap(model)
+	for k, v := range post {
+		if _, ok := got[k]; !ok {
+			output[k] = v
+		}
+	}
+	return output
 }
 
 func (c *CurdController) Delete(ctx *gin.Context) {

@@ -18,7 +18,7 @@ type Button struct {
 	Dialog      interface{} `json:"dialog,omitempty"`
 	ClassName   string      `json:"className,omitempty"`
 	ConfirmText string      `json:"confirmText,omitempty"`
-	Api         *Api        `json:"api,omitempty"`
+	Api         Url         `json:"api,omitempty"`
 }
 
 func (b *Button) SetClassName(v string) *Button {
@@ -26,13 +26,10 @@ func (b *Button) SetClassName(v string) *Button {
 	return b
 }
 
-func (b *Button) SetAjax(confirmText, url string) *Api {
+func (b *Button) SetAjax(confirmText string, url Url) Url {
 	b.ConfirmText = confirmText
 	b.ActionType = "ajax"
-	b.Api = &Api{
-		Method: "post",
-		Url:    url,
-	}
+	b.Api = url
 	return b.Api
 }
 

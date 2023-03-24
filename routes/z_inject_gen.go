@@ -6,6 +6,7 @@ import (
 	admin_menu "github.com/go-home-admin/go-admin/app/http/admin/admin_menu"
 	admin_role "github.com/go-home-admin/go-admin/app/http/admin/admin_role"
 	admin_user "github.com/go-home-admin/go-admin/app/http/admin/admin_user"
+	sys_queue "github.com/go-home-admin/go-admin/app/http/admin/sys_queue"
 	api_demo "github.com/go-home-admin/go-admin/app/http/api/api_demo"
 	public "github.com/go-home-admin/go-admin/app/http/api/public"
 	providers "github.com/go-home-admin/home/bootstrap/providers"
@@ -37,6 +38,7 @@ func NewAdminRoutes() *AdminRoutes {
 		_AdminRoutesSingle.admin_menu = admin_menu.NewController()
 		_AdminRoutesSingle.admin_role = admin_role.NewController()
 		_AdminRoutesSingle.admin_user = admin_user.NewController()
+		_AdminRoutesSingle.sys_queue = sys_queue.NewController()
 		providers.AfterProvider(_AdminRoutesSingle, "")
 	}
 	return _AdminRoutesSingle
