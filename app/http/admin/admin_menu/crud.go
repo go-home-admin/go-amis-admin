@@ -13,7 +13,7 @@ func (c *CrudContext) Common() {
 func (c *CrudContext) Table(curd *amis.Crud) {
 	curd.AutoGenerateFilter()
 	curd.Column("ID", "id").SearchableInput()
-	curd.Column("父级", "parent_id")
+	curd.Column("父级2", "parent_id")
 	curd.Column("排序", "order")
 	curd.Column("组件名称", "name")
 	curd.Column("组件", "component")

@@ -28,7 +28,6 @@ func NewApp() *App {
 		_AppSingle.Container = services.NewContainer()
 		_AppSingle.FrameworkProvider = providers_2.NewFrameworkProvider()
 		_AppSingle.MysqlProvider = providers_2.NewMysqlProvider()
-		_AppSingle.RedisProvider = providers_2.NewRedisProvider()
 		_AppSingle.Route = NewRoute()
 		_AppSingle.Response = NewResponse()
 		_AppSingle.Provider = web.NewProvider()

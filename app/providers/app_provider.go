@@ -15,7 +15,6 @@ type App struct {
 	*services.Container          `inject:""`
 	*providers.FrameworkProvider `inject:""`
 	*providers.MysqlProvider     `inject:""`
-	*providers.RedisProvider     `inject:""`
 
 	*Route    `inject:""`
 	*Response `inject:""`
