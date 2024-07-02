@@ -10,6 +10,7 @@ func (c *CrudContext) Common() {
 	c.SetDb(admin.NewOrmAdminMenu())
 }
 
+// Table 菜单管理只对查询生效, 渲染使用原生 vue 组件
 func (c *CrudContext) Table(curd *amis.Crud) {
 	curd.AutoGenerateFilter()
 	curd.Column("ID", "id").SearchableInput()
